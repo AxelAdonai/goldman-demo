@@ -294,7 +294,9 @@ async function guardar() {
   return d;
 }
 
-// ----- Generación de Formato e Impresión -----
+// ============================================================
+// Generar e imprimir reporte idéntico al formato PDF del HGM
+// ============================================================
 async function descargarPDF() {
   if (!ultimoIdGuardado) {
     try {
@@ -309,41 +311,70 @@ async function descargarPDF() {
 
   if (!contenedor) return;
 
-  // Construir filas de la tabla de criterios
-  let filas = '<tr class="rep-grupo"><td colspan="3">Historia</td></tr>';
-  filas += `<tr><td>Infarto de miocardio en los 6 meses previos</td><td>${d.respuestas.im6m ? 'SI' : 'NO'}</td><td>${d.respuestas.im6m ? 10 : 0}</td></tr>`;
-  filas += `<tr><td>Edad &gt; 70 años</td><td>${d.edad > 70 ? 'SI' : 'NO'}</td><td>${d.edad > 70 ? 5 : 0}</td></tr>`;
+  // Calculo de puntos por criterio
+  const edadPts = (d.edad > 70) ? 5 : 0;
+  const im6mPts = d.respuestas.im6m ? 10 : 0;
+  const s3pvyPts = d.respuestas.s3pvy ? 11 : 0;
+  const estaoPts = d.respuestas.estao ? 3 : 0;
+  const ritmoPts = d.respuestas.ritmo ? 7 : 0;
+  const ev5Pts = d.respuestas.ev5 ? 7 : 0;
+  const ciraltoPts = d.respuestas.ciralto ? 3 : 0;
+  const cirurgPts = d.respuestas.cirurg ? 4 : 0;
 
-  GRUPOS.forEach(g => {
-    if (g.clave !== 'historia') {
-      filas += `<tr class="rep-grupo"><td colspan="3">${g.titulo}</td></tr>`;
-      if (g.estadoGeneral) {
-        let alguno = false;
-        g.items.forEach(it => {
-          const si = d.respuestas[it.id];
-          if (si) alguno = true;
-          filas += `<tr><td style="padding-left:18px">${it.texto}</td><td>${si ? 'SI' : 'NO'}</td><td>—</td></tr>`;
-        });
-        filas += `<tr><td style="font-style:italic">Estado general alterado (cualquiera)</td><td>${alguno ? 'SI' : 'NO'}</td><td>${alguno ? 3 : 0}</td></tr>`;
-      } else {
-        g.items.forEach(it => {
-          const si = d.respuestas[it.id];
-          filas += `<tr><td>${it.texto}</td><td>${si ? 'SI' : 'NO'}</td><td>${si ? it.puntos : 0}</td></tr>`;
-        });
-      }
-    }
-  });
+  const estadoAlterado = d.respuestas.gases || d.respuestas.iones || d.respuestas.renal || d.respuestas.hepat || d.respuestas.encam;
+  const estadoPts = estadoAlterado ? 3 : 0;
 
+  // Tabla de criterios
+  let filas = '<tr class="rep-grupo"><td colspan="3">HISTORIA</td></tr>';
+  filas += `<tr><td>Infarto de miocardio en los 6 meses previos</td><td style="text-align:center">${d.respuestas.im6m ? 'SI' : 'NO'}</td><td style="text-align:center">${im6mPts}</td></tr>`;
+  filas += `<tr><td>Edad &gt; 70 años</td><td style="text-align:center">${d.edad > 70 ? 'SI' : 'NO'}</td><td style="text-align:center">${edadPts}</td></tr>`;
+
+  filas += '<tr class="rep-grupo"><td colspan="3">EXPLORACIÓN</td></tr>';
+  filas += `<tr><td>Tercer tono ó presión venosa yugular elevada</td><td style="text-align:center">${d.respuestas.s3pvy ? 'SI' : 'NO'}</td><td style="text-align:center">${s3pvyPts}</td></tr>`;
+  filas += `<tr><td>Estenosis aórtica significativa</td><td style="text-align:center">${d.respuestas.estao ? 'SI' : 'NO'}</td><td style="text-align:center">${estaoPts}</td></tr>`;
+
+  filas += '<tr class="rep-grupo"><td colspan="3">ELECTROCARDIOGRAMA</td></tr>';
+  filas += `<tr><td>Ritmo no sinusal ó extrasistolia supraventricular en el último ECG</td><td style="text-align:center">${d.respuestas.ritmo ? 'SI' : 'NO'}</td><td style="text-align:center">${ritmoPts}</td></tr>`;
+  filas += `<tr><td>Más de 5 extrasístoles ventriculares/min en cualquier ECG preop.</td><td style="text-align:center">${d.respuestas.ev5 ? 'SI' : 'NO'}</td><td style="text-align:center">${ev5Pts}</td></tr>`;
+
+  filas += '<tr class="rep-grupo"><td colspan="3">ESTADO GENERAL</td></tr>';
+  filas += `<tr><td style="padding-left:18px">PO₂ &lt; 60 ó PCO₂ &gt; 55 mmHg</td><td style="text-align:center">${d.respuestas.gases ? 'SI' : 'NO'}</td><td style="text-align:center">—</td></tr>`;
+  filas += `<tr><td style="padding-left:18px">K &lt; 3 ó HCO₃ &lt; 20 mEq/L</td><td style="text-align:center">${d.respuestas.iones ? 'SI' : 'NO'}</td><td style="text-align:center">—</td></tr>`;
+  filas += `<tr><td style="padding-left:18px">BUN &gt; 50 ó Cr &gt; 3 mg/dl</td><td style="text-align:center">${d.respuestas.renal ? 'SI' : 'NO'}</td><td style="text-align:center">—</td></tr>`;
+  filas += `<tr><td style="padding-left:18px">GOT sérica anormal ó signos de hepatopatía crónica</td><td style="text-align:center">${d.respuestas.hepat ? 'SI' : 'NO'}</td><td style="text-align:center">—</td></tr>`;
+  filas += `<tr><td style="padding-left:18px">Hospitalizado por causa no cardiaca</td><td style="text-align:center">${d.respuestas.encam ? 'SI' : 'NO'}</td><td style="text-align:center">—</td></tr>`;
+  filas += `<tr><td style="font-style:italic">Estado general alterado (cualquiera de los anteriores)</td><td style="text-align:center">${estadoAlterado ? 'SI' : 'NO'}</td><td style="text-align:center">${estadoPts}</td></tr>`;
+
+  filas += '<tr class="rep-grupo"><td colspan="3">INTERVENCIÓN QUIRÚRGICA</td></tr>';
+  filas += `<tr><td>Intraperitoneal, intratorácica ó aórtica</td><td style="text-align:center">${d.respuestas.ciralto ? 'SI' : 'NO'}</td><td style="text-align:center">${ciraltoPts}</td></tr>`;
+  filas += `<tr><td>Urgente</td><td style="text-align:center">${d.respuestas.cirurg ? 'SI' : 'NO'}</td><td style="text-align:center">${cirurgPts}</td></tr>`;
+
+  // ECG adjunto
   let ecgHtml = '';
   if (d.ecg_archivo && d.ecg_archivo.datos) {
     ecgHtml = `
       <div class="ecg-bloque">
-        <p class="ecg-titulo">ECG adjunto — ${d.nombre} | Exp. ${d.expediente} | ${d.fecha}</p>
+        <p class="ecg-titulo">ECG adjunto ${d.nombre} Exp. ${d.expediente} | ${d.fecha}</p>
         <div class="ecg-image-container">
           <img src="${d.ecg_archivo.datos}" class="rep-ecg" alt="ECG">
         </div>
       </div>`;
   }
+
+  // Tabla de referencia de clases
+  const refClases = [
+    { n: 'I', rng: '0–5', m: '0,20%', r: 'Bajo' },
+    { n: 'II', rng: '6–12', m: '1,50%', r: 'Intermedio' },
+    { n: 'III', rng: '13–25', m: '2,30%', r: 'Alto' },
+    { n: 'IV', rng: '&gt; 25', m: '56%', r: 'Muy alto' },
+  ];
+
+  const cClase = clasificar(d.score);
+  let refRows = '';
+  refClases.forEach(rc => {
+    const act = (rc.n === (cClase ? cClase.n : '')) ? ' class="activo"' : '';
+    refRows += `<tr${act}><td>${rc.n}</td><td>${rc.rng}</td><td>${rc.m}</td><td>${rc.r}</td></tr>`;
+  });
 
   contenedor.innerHTML = `
     <div class="rep-encabezado">
@@ -365,23 +396,41 @@ async function descargarPDF() {
         <tr><th>Diagnóstico</th><td colspan="3">${d.diagnostico || '—'}</td></tr>
         <tr><th>Presión arterial</th><td colspan="3">${d.presion_arterial || '—'}</td></tr>
       </table>
+
       <table class="rep">
-        <thead><tr><th>Criterio</th><th style="width:80px;text-align:center">Respuesta</th><th style="width:70px;text-align:center">Puntos</th></tr></thead>
+        <thead><tr><th>Criterio</th><th style="width:90px;text-align:center">Respuesta</th><th style="width:80px;text-align:center">Puntos</th></tr></thead>
         <tbody>
           ${filas}
-          <tr><th colspan="2" style="text-align:right">TOTAL</th><th style="text-align:center;font-size:1.1rem">${d.score}</th></tr>
+          <tr><th colspan="2" style="text-align:right">TOTAL</th><th style="text-align:center;font-size:1rem">${d.score}</th></tr>
         </tbody>
       </table>
+
       <div class="resultado-bloque">
         <span class="score-num">${d.score}</span>
         <div>
           <span class="clase-txt">${d.clase}</span>
+          <div class="mort-txt">${cClase ? cClase.m : ''}</div>
         </div>
       </div>
+
       <table class="rep">
         <tr><th style="width:170px">Diagnóstico del ECG</th><td>${d.ecg_dx || '—'}</td></tr>
       </table>
+
       ${ecgHtml}
+
+      <table class="ref">
+        <thead><tr><th>Clase</th><th>Puntuación</th><th>Mortalidad</th><th>Riesgo</th></tr></thead>
+        <tbody>${refRows}</tbody>
+      </table>
+
+      <div class="rep-firma">
+        <div class="linea"></div>
+        <div class="nombre-med">${d.medico || ''}</div>
+        <div>Nombre y firma del médico</div>
+      </div>
+
+      <p class="pie">Adaptado de Goldman L, et al. N Engl J Med 1977;297:845. &nbsp;|&nbsp; ID Registro: ${d.id} &nbsp;|&nbsp; ${d.fecha}</p>
     </div>
   `;
 
