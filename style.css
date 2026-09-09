@@ -1,18 +1,301 @@
-/* ============================================================
-   ESTILOS DE IMPRESIÓN DEL REPORTE (PDF / DEMO)
-   ============================================================ */
+:root {
+  --verde: #0d5c63;
+  --verde-osc: #083d42;
+  --gris: #f4f6f6;
+  --borde: #0d5c63;
+  --guinda: #611232;
+}
 
-/* Ocultar el contenedor de impresión en la pantalla normal */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  font-family: 'Segoe UI', Arial, sans-serif;
+}
+
+body {
+  background: var(--gris);
+  color: #1c2b2d;
+  padding: 20px;
+}
+
+/* ===== ENCABEZADO WEB ===== */
+.encabezado {
+  background: #fff;
+  border-bottom: 4px solid var(--guinda);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 12px 20px;
+  flex-wrap: wrap;
+}
+
+.encabezado img {
+  height: 70px;
+  width: auto;
+  flex-shrink: 0;
+}
+
+.titulos {
+  flex: 1;
+  text-align: center;
+}
+
+.titulos h1 {
+  font-size: 1.05rem;
+  color: var(--guinda);
+  margin: 0;
+}
+
+.titulos h2 {
+  font-size: .85rem;
+  font-weight: 500;
+  color: #444;
+  margin: 2px 0 0 0;
+}
+
+/* ===== CONTENEDORES WEB ===== */
+main {
+  max-width: 680px;
+  margin: 20px auto;
+  padding: 0 14px 60px;
+}
+
+.tarjeta {
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, .08);
+  padding: 20px;
+  margin-bottom: 18px;
+}
+
+.tarjeta h3 {
+  color: var(--verde);
+  font-size: 1rem;
+  margin-bottom: 14px;
+  border-bottom: 1px solid #e2e8e8;
+  padding-bottom: 8px;
+}
+
+.grupo {
+  margin: 14px 0 4px;
+  font-weight: 700;
+  color: var(--guinda);
+  font-size: .92rem;
+  text-transform: uppercase;
+  letter-spacing: .04em;
+  border-bottom: 1px dashed #d8c3cd;
+  padding-bottom: 4px;
+}
+
+.fila {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 9px 0;
+}
+
+.fila label {
+  flex: 1;
+  font-size: .95rem;
+}
+
+.pts {
+  font-size: .78rem;
+  color: #888;
+  white-space: nowrap;
+}
+
+.fila input[type=text],
+.fila input[type=date],
+.fila input[type=number],
+.fila select,
+.fila textarea {
+  padding: 8px 10px;
+  border: 1.5px solid #c7d4d5;
+  border-radius: 8px;
+  font-size: .95rem;
+  width: 55%;
+  font-family: inherit;
+}
+
+.fila textarea {
+  width: 100%;
+  resize: vertical;
+}
+
+.fila select {
+  width: 55%;
+}
+
+.edad-input {
+  width: 90px !important;
+  text-align: right;
+}
+
+.toggle {
+  min-width: 74px;
+  padding: 9px 0;
+  border: 2px solid var(--borde);
+  border-radius: 9px;
+  background: #fff;
+  color: var(--verde);
+  font-weight: 700;
+  font-size: .95rem;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+
+.toggle.si {
+  background: var(--verde);
+  color: #fff;
+}
+
+.nota-grupo {
+  font-size: .78rem;
+  color: #777;
+  margin: 2px 0 6px;
+}
+
+.resultado {
+  text-align: center;
+  padding: 18px 0 6px;
+}
+
+.resultado .score {
+  font-size: 2.4rem;
+  font-weight: 800;
+  color: var(--verde);
+}
+
+.resultado .clase {
+  font-size: 1.15rem;
+  margin-top: 4px;
+}
+
+.resultado .mortalidad {
+  font-size: .9rem;
+  color: #666;
+  margin-top: 4px;
+}
+
+.clase.c1 {
+  color: #1a7f37;
+}
+
+.clase.c2 {
+  color: #b58900;
+}
+
+.clase.c3 {
+  color: #c2410c;
+}
+
+.clase.c4 {
+  color: #b91c1c;
+}
+
+.botones {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.botones button {
+  flex: 1;
+  min-width: 120px;
+  padding: 13px 10px;
+  border: none;
+  border-radius: 10px;
+  font-size: .95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all .2s;
+  text-align: center;
+}
+
+.btn-guardar {
+  background: var(--verde);
+  color: #fff;
+}
+
+.btn-guardar:hover {
+  background: var(--verde-osc);
+}
+
+.btn-descargar {
+  background: var(--guinda);
+  color: #fff;
+}
+
+.btn-descargar:hover {
+  background: #4a0d26;
+}
+
+.btn-limpiar {
+  background: #e5e7eb;
+  color: #333;
+}
+
+.btn-limpiar:hover {
+  background: #d1d5db;
+}
+
+.aviso {
+  font-size: .8rem;
+  color: #666;
+  text-align: center;
+  margin-top: 14px;
+  line-height: 1.4;
+}
+
+#estado-guardado {
+  text-align: center;
+  font-size: .9rem;
+  margin-top: 10px;
+  min-height: 1.2em;
+}
+
+#estado-guardado.ok {
+  color: #1a7f37;
+}
+
+#estado-guardado.error {
+  color: #b91c1c;
+}
+
+#estado-guardado.cargando {
+  color: #b58900;
+}
+
+.preview-ecg-img {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  max-height: 160px;
+  height: auto;
+  object-fit: contain;
+  border: 1px solid #c7d4d5;
+  border-radius: 8px;
+  margin-top: 6px;
+  background: #f8f9fa;
+}
+
+/* Ocultar el reporte de impresión en pantalla normal */
 #reporte-impresion {
   display: none;
 }
 
+/* ============================================================
+   REGLAS DE IMPRESIÓN (PDF Y FORMATO OFICIAL)
+   ============================================================ */
 @media print {
 
-  /* Ocultar todo el contenido web interactivo */
+  /* Ocultar la aplicación web */
   header,
   main,
-  footer,
   .encabezado,
   .tarjeta,
   .botones,
@@ -21,21 +304,19 @@
     display: none !important;
   }
 
-  /* Configurar página de impresión limpia */
   @page {
     size: letter;
-    margin: 10mm 15mm;
+    margin: 8mm 12mm;
   }
 
   body {
     background: #fff !important;
-    color: #000 !important;
+    color: #1c2b2d !important;
     font-size: 11px;
     padding: 0;
     margin: 0;
   }
 
-  /* Mostrar únicamente el contenedor del reporte */
   #reporte-impresion {
     display: block !important;
     position: absolute;
@@ -44,19 +325,19 @@
     width: 100%;
   }
 
-  /* Encabezado del documento */
   .rep-encabezado {
     display: flex;
     align-items: center;
     justify-content: space-between;
     border-bottom: 3px solid #611232;
     padding-bottom: 8px;
-    margin-bottom: 12px;
+    margin-bottom: 10px;
   }
 
   .rep-logo {
-    max-height: 55px;
-    width: auto;
+    max-height: 50px;
+    max-width: 100px;
+    object-fit: contain;
   }
 
   .rep-titulo {
@@ -65,36 +346,37 @@
   }
 
   .rep-titulo h1 {
-    font-size: 13px;
+    font-size: 12px;
     color: #611232;
     margin: 0;
     text-transform: uppercase;
   }
 
   .rep-titulo h2 {
-    font-size: 11px;
-    margin: 2px 0;
+    font-size: 10px;
+    margin: 2px 0 0;
+    font-weight: 600;
   }
 
   .rep-titulo h3 {
-    font-size: 10px;
+    font-size: 9px;
+    margin: 2px 0 0;
     color: #444;
-    margin: 0;
   }
 
-  /* Tablas de reporte */
   table.rep {
     width: 100%;
     border-collapse: collapse;
-    margin: 8px 0;
+    margin: 6px 0;
   }
 
   table.rep th,
   table.rep td {
-    border: 1px solid #444;
+    border: 1px solid #555;
     padding: 4px 6px;
     text-align: left;
-    font-size: 11px;
+    vertical-align: middle;
+    font-size: 10px;
   }
 
   table.rep th {
@@ -104,49 +386,57 @@
     print-color-adjust: exact;
   }
 
-  /* Bloque de resultado del score */
+  tr.rep-grupo td {
+    background: #f3e8ee !important;
+    font-weight: bold;
+    text-transform: uppercase;
+    font-size: 9px;
+    color: #611232;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
   .resultado-bloque {
-    margin: 12px 0;
-    padding: 10px 15px;
-    border: 2px solid #0d5c63;
-    border-radius: 8px;
-    background: #f4f6f6 !important;
+    margin: 8px 0;
+    padding: 8px 14px;
+    border-radius: 6px;
     display: flex;
     align-items: center;
     gap: 15px;
+    background: #f8f9fa !important;
+    border: 2px solid #0d5c63;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
   .score-num {
-    font-size: 24px;
+    font-size: 22px;
     font-weight: 900;
     color: #0d5c63;
   }
 
   .clase-txt {
-    font-size: 14px;
+    font-size: 12px;
     font-weight: bold;
   }
 
-  /* ECG adjunto */
   .ecg-bloque {
-    margin-top: 15px;
+    margin-top: 10px;
     page-break-inside: avoid;
   }
 
   .ecg-titulo {
     font-weight: bold;
-    font-size: 11px;
+    font-size: 10px;
     margin-bottom: 4px;
   }
 
   .rep-ecg {
     max-width: 100%;
-    max-height: 280px;
+    max-height: 250px;
     display: block;
     margin: 0 auto;
     object-fit: contain;
-    border: 1px solid #ccc;
+    border: 1px solid #ddd;
   }
 }

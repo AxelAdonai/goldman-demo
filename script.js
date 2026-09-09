@@ -3,7 +3,6 @@
 // Autor: Axel Adonai
 // ============================================================
 
-// ----- Criterios clínicos del índice -----
 const GRUPOS = [
   {
     clave: 'historia', titulo: 'Historia', cont: 'g-historia', items: [
@@ -40,7 +39,6 @@ const GRUPOS = [
 ];
 const TODOS = GRUPOS.flatMap(g => g.items);
 
-// ----- Clasificación de riesgo -----
 const CLASES = [
   { max: 5, n: 'I', t: 'Clase I (Riesgo Bajo)', m: 'Mortalidad estimada: 0,20%', c: 'c1' },
   { max: 12, n: 'II', t: 'Clase II (Riesgo Intermedio)', m: 'Mortalidad estimada: 1,50%', c: 'c2' },
@@ -53,12 +51,9 @@ function clasificar(score) {
 }
 
 const LIMITE_ARCHIVO_MB = 8;
-
-// ----- Estado de sesión -----
 let ecgArchivo = null;
 let ultimoIdGuardado = null;
 
-// ----- Inicio -----
 document.addEventListener('DOMContentLoaded', inicializar);
 
 function inicializar() {
@@ -73,7 +68,6 @@ function inicializar() {
   document.getElementById('btnLimpiar').addEventListener('click', limpiar);
 }
 
-// ----- Genera los botones SI/NO por grupo -----
 function generarBotonesToggle() {
   GRUPOS.forEach(g => {
     const cont = document.getElementById(g.cont);
@@ -90,7 +84,6 @@ function generarBotonesToggle() {
   });
 }
 
-// ----- Alterna el valor de un criterio -----
 function alternarToggle() {
   const marcar = this.dataset.val === '0';
   this.dataset.val = marcar ? '1' : '0';
@@ -112,7 +105,6 @@ function establecerFechaHoy() {
   if (el) el.value = fechaHoyISO();
 }
 
-// ----- Cálculo del score Goldman -----
 function calcular() {
   const edadInput = document.getElementById('edad');
   const edad = parseInt(edadInput ? edadInput.value : '');
@@ -156,7 +148,6 @@ function calcular() {
   return total;
 }
 
-// ----- Recopila datos del formulario -----
 function datosActuales() {
   const edad = parseInt(document.getElementById('edad').value);
   const respuestas = {};
@@ -188,9 +179,6 @@ function datosActuales() {
   };
 }
 
-// ============================================================
-// Manejo del archivo ECG (imagen o PDF)
-// ============================================================
 async function manejarArchivoECG(e) {
   const archivo = e.target.files[0];
   const prev = document.getElementById('ecg-preview');
@@ -277,9 +265,6 @@ async function convertirPdfAImagen(archivo) {
   return canvas.toDataURL('image/png');
 }
 
-// ============================================================
-// Guardar registro en localStorage (Client-Side Demo)
-// ============================================================
 async function guardar() {
   const d = datosActuales();
   const estado = document.getElementById('estado-guardado');
@@ -309,9 +294,7 @@ async function guardar() {
   return d;
 }
 
-// ============================================================
-// Generar e imprimir reporte dinámico en el navegador
-// ============================================================
+// ----- Generación de Formato e Impresión -----
 async function descargarPDF() {
   if (!ultimoIdGuardado) {
     try {
@@ -324,10 +307,32 @@ async function descargarPDF() {
   const d = datosActuales();
   const contenedor = document.getElementById('reporte-impresion');
 
-  if (!contenedor) {
-    alert("Falta el contenedor #reporte-impresion en index.html");
-    return;
-  }
+  if (!contenedor) return;
+
+  // Construir filas de la tabla de criterios
+  let filas = '<tr class="rep-grupo"><td colspan="3">Historia</td></tr>';
+  filas += `<tr><td>Infarto de miocardio en los 6 meses previos</td><td>${d.respuestas.im6m ? 'SI' : 'NO'}</td><td>${d.respuestas.im6m ? 10 : 0}</td></tr>`;
+  filas += `<tr><td>Edad &gt; 70 años</td><td>${d.edad > 70 ? 'SI' : 'NO'}</td><td>${d.edad > 70 ? 5 : 0}</td></tr>`;
+
+  GRUPOS.forEach(g => {
+    if (g.clave !== 'historia') {
+      filas += `<tr class="rep-grupo"><td colspan="3">${g.titulo}</td></tr>`;
+      if (g.estadoGeneral) {
+        let alguno = false;
+        g.items.forEach(it => {
+          const si = d.respuestas[it.id];
+          if (si) alguno = true;
+          filas += `<tr><td style="padding-left:18px">${it.texto}</td><td>${si ? 'SI' : 'NO'}</td><td>—</td></tr>`;
+        });
+        filas += `<tr><td style="font-style:italic">Estado general alterado (cualquiera)</td><td>${alguno ? 'SI' : 'NO'}</td><td>${alguno ? 3 : 0}</td></tr>`;
+      } else {
+        g.items.forEach(it => {
+          const si = d.respuestas[it.id];
+          filas += `<tr><td>${it.texto}</td><td>${si ? 'SI' : 'NO'}</td><td>${si ? it.puntos : 0}</td></tr>`;
+        });
+      }
+    }
+  });
 
   let ecgHtml = '';
   if (d.ecg_archivo && d.ecg_archivo.datos) {
@@ -348,23 +353,33 @@ async function descargarPDF() {
         <h2>Valoración perioperatoria de riesgo cardiovascular</h2>
         <h3>Índice de Goldman de riesgo cardiaco</h3>
       </div>
+      <img src="logo-hgm.png" alt="Logo HGM" class="rep-logo">
     </div>
     <div class="contenido">
       <table class="rep">
         <tr><th>Nombre del paciente</th><td colspan="3">${d.nombre}</td></tr>
-        <tr><th>Expediente</th><td>${d.expediente}</td><th>PAB</th><td>${d.pab || '—'}</td></tr>
+        <tr><th style="width:130px">Expediente</th><td style="width:130px">${d.expediente}</td><th style="width:80px">PAB</th><td>${d.pab || '—'}</td></tr>
         <tr><th>Cama</th><td>${d.cama || '—'}</td><th>Sexo</th><td>${d.sexo || '—'}</td></tr>
         <tr><th>Edad</th><td>${d.edad} años</td><th>Fecha</th><td>${d.fecha}</td></tr>
         <tr><th>Médico</th><td colspan="3">${d.medico || '—'}</td></tr>
         <tr><th>Diagnóstico</th><td colspan="3">${d.diagnostico || '—'}</td></tr>
         <tr><th>Presión arterial</th><td colspan="3">${d.presion_arterial || '—'}</td></tr>
       </table>
+      <table class="rep">
+        <thead><tr><th>Criterio</th><th style="width:80px;text-align:center">Respuesta</th><th style="width:70px;text-align:center">Puntos</th></tr></thead>
+        <tbody>
+          ${filas}
+          <tr><th colspan="2" style="text-align:right">TOTAL</th><th style="text-align:center;font-size:1.1rem">${d.score}</th></tr>
+        </tbody>
+      </table>
       <div class="resultado-bloque">
-        <span class="score-num">Score: ${d.score}</span>
-        <div><strong class="clase-txt">${d.clase}</strong></div>
+        <span class="score-num">${d.score}</span>
+        <div>
+          <span class="clase-txt">${d.clase}</span>
+        </div>
       </div>
       <table class="rep">
-        <tr><th>Diagnóstico del ECG</th><td>${d.ecg_dx || '—'}</td></tr>
+        <tr><th style="width:170px">Diagnóstico del ECG</th><td>${d.ecg_dx || '—'}</td></tr>
       </table>
       ${ecgHtml}
     </div>
@@ -373,7 +388,6 @@ async function descargarPDF() {
   window.print();
 }
 
-// ----- Limpia todos los campos del formulario -----
 function limpiar() {
   ['nombre', 'expediente', 'pab', 'cama', 'medico', 'edad', 'presion_arterial'].forEach(id => {
     const el = document.getElementById(id);
