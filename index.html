@@ -87,6 +87,15 @@
 
       <div class="grupo">ELECTROCARDIOGRAMA</div>
       <div id="g-ecg"></div>
+      <div class="fila" style="margin-top: 10px;">
+        <label for="ecg-dx">Diagnóstico del ECG</label>
+        <input type="text" id="ecg-dx" placeholder="Ritmo sinusal, trazado normal, etc.">
+      </div>
+      <div class="fila">
+        <label for="ecg-archivo">Adjuntar trazado ECG (Imagen / PDF)</label>
+        <input type="file" id="ecg-archivo" accept="image/*,application/pdf">
+      </div>
+      <div id="ecg-preview"></div>
 
       <div class="grupo">ESTADO GENERAL</div>
       <p class="nota-grupo">Si presenta cualquiera de los siguientes criterios, se otorgan 3 pts en total:</p>
