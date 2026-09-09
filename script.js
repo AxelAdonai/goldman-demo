@@ -1,8 +1,9 @@
 // ============================================================
-// Índice de Goldman - Versión Cliente (Demo GitHub Pages)
+// Índice de Goldman — Versión Cliente (Demo GitHub Pages)
 // Autor: Axel Adonai
 // ============================================================
 
+// ----- Criterios clínicos del índice -----
 const GRUPOS = [
   {
     clave: 'historia', titulo: 'Historia', cont: 'g-historia', items: [
@@ -39,6 +40,7 @@ const GRUPOS = [
 ];
 const TODOS = GRUPOS.flatMap(g => g.items);
 
+// ----- Clasificación de riesgo -----
 const CLASES = [
   { max: 5, n: 'I', t: 'Clase I (Riesgo Bajo)', m: 'Mortalidad estimada: 0,20%', c: 'c1' },
   { max: 12, n: 'II', t: 'Clase II (Riesgo Intermedio)', m: 'Mortalidad estimada: 1,50%', c: 'c2' },
@@ -51,9 +53,12 @@ function clasificar(score) {
 }
 
 const LIMITE_ARCHIVO_MB = 8;
+
+// ----- Estado de sesión -----
 let ecgArchivo = null;
 let ultimoIdGuardado = null;
 
+// ----- Inicio -----
 document.addEventListener('DOMContentLoaded', inicializar);
 
 function inicializar() {
@@ -68,9 +73,11 @@ function inicializar() {
   document.getElementById('btnLimpiar').addEventListener('click', limpiar);
 }
 
+// ----- Genera los botones SI/NO por grupo -----
 function generarBotonesToggle() {
   GRUPOS.forEach(g => {
     const cont = document.getElementById(g.cont);
+    if (!cont) return;
     g.items.forEach(it => {
       const fila = document.createElement('div');
       fila.className = 'fila';
@@ -83,6 +90,7 @@ function generarBotonesToggle() {
   });
 }
 
+// ----- Alterna el valor de un criterio -----
 function alternarToggle() {
   const marcar = this.dataset.val === '0';
   this.dataset.val = marcar ? '1' : '0';
@@ -104,41 +112,58 @@ function establecerFechaHoy() {
   if (el) el.value = fechaHoyISO();
 }
 
+// ----- Cálculo del score Goldman -----
 function calcular() {
-  const edad = parseInt(document.getElementById('edad').value);
+  const edadInput = document.getElementById('edad');
+  const edad = parseInt(edadInput ? edadInput.value : '');
   let total = (edad > 70) ? 5 : 0;
 
   GRUPOS.forEach(g => {
     if (g.estadoGeneral) {
-      if (g.items.some(it => document.getElementById(it.id).dataset.val === '1')) total += 3;
+      if (g.items.some(it => {
+        const el = document.getElementById(it.id);
+        return el && el.dataset.val === '1';
+      })) total += 3;
     } else {
       g.items.forEach(it => {
-        if (document.getElementById(it.id).dataset.val === '1') total += it.puntos;
+        const el = document.getElementById(it.id);
+        if (el && el.dataset.val === '1') total += it.puntos;
       });
     }
   });
 
-  const hayDatos = !isNaN(edad) || TODOS.some(it => document.getElementById(it.id).dataset.val === '1');
-  document.getElementById('score').textContent = hayDatos ? total : '…';
+  const hayDatos = !isNaN(edad) || TODOS.some(it => {
+    const el = document.getElementById(it.id);
+    return el && el.dataset.val === '1';
+  });
+
+  const elScore = document.getElementById('score');
+  if (elScore) elScore.textContent = hayDatos ? total : '…';
 
   const elClase = document.getElementById('clase');
   const elMortalidad = document.getElementById('mortalidad');
   if (hayDatos) {
     const c = clasificar(total);
-    elClase.textContent = c.t;
-    elClase.className = 'clase ' + c.c;
-    elMortalidad.textContent = c.m;
+    if (elClase) {
+      elClase.textContent = c.t;
+      elClase.className = 'clase ' + c.c;
+    }
+    if (elMortalidad) elMortalidad.textContent = c.m;
   } else {
-    elClase.textContent = '';
-    elMortalidad.textContent = '';
+    if (elClase) elClase.textContent = '';
+    if (elMortalidad) elMortalidad.textContent = '';
   }
   return total;
 }
 
+// ----- Recopila datos del formulario -----
 function datosActuales() {
   const edad = parseInt(document.getElementById('edad').value);
   const respuestas = {};
-  TODOS.forEach(it => { respuestas[it.id] = document.getElementById(it.id).dataset.val === '1'; });
+  TODOS.forEach(it => {
+    const el = document.getElementById(it.id);
+    respuestas[it.id] = el ? (el.dataset.val === '1') : false;
+  });
 
   const score = calcular();
   const c = clasificar(score);
@@ -163,6 +188,9 @@ function datosActuales() {
   };
 }
 
+// ============================================================
+// Manejo del archivo ECG (imagen o PDF)
+// ============================================================
 async function manejarArchivoECG(e) {
   const archivo = e.target.files[0];
   const prev = document.getElementById('ecg-preview');
@@ -249,6 +277,9 @@ async function convertirPdfAImagen(archivo) {
   return canvas.toDataURL('image/png');
 }
 
+// ============================================================
+// Guardar registro en localStorage (Client-Side Demo)
+// ============================================================
 async function guardar() {
   const d = datosActuales();
   const estado = document.getElementById('estado-guardado');
@@ -278,6 +309,9 @@ async function guardar() {
   return d;
 }
 
+// ============================================================
+// Generar e imprimir reporte dinámico en el navegador
+// ============================================================
 async function descargarPDF() {
   if (!ultimoIdGuardado) {
     try {
@@ -289,6 +323,11 @@ async function descargarPDF() {
 
   const d = datosActuales();
   const contenedor = document.getElementById('reporte-impresion');
+
+  if (!contenedor) {
+    alert("Falta el contenedor #reporte-impresion en index.html");
+    return;
+  }
 
   let ecgHtml = '';
   if (d.ecg_archivo && d.ecg_archivo.datos) {
@@ -309,12 +348,11 @@ async function descargarPDF() {
         <h2>Valoración perioperatoria de riesgo cardiovascular</h2>
         <h3>Índice de Goldman de riesgo cardiaco</h3>
       </div>
-      <img src="logo-hgm.png" alt="Logo HGM" class="rep-logo">
     </div>
     <div class="contenido">
       <table class="rep">
         <tr><th>Nombre del paciente</th><td colspan="3">${d.nombre}</td></tr>
-        <tr><th style="width:130px">Expediente</th><td style="width:130px">${d.expediente}</td><th style="width:80px">PAB</th><td>${d.pab || '—'}</td></tr>
+        <tr><th>Expediente</th><td>${d.expediente}</td><th>PAB</th><td>${d.pab || '—'}</td></tr>
         <tr><th>Cama</th><td>${d.cama || '—'}</td><th>Sexo</th><td>${d.sexo || '—'}</td></tr>
         <tr><th>Edad</th><td>${d.edad} años</td><th>Fecha</th><td>${d.fecha}</td></tr>
         <tr><th>Médico</th><td colspan="3">${d.medico || '—'}</td></tr>
@@ -322,13 +360,11 @@ async function descargarPDF() {
         <tr><th>Presión arterial</th><td colspan="3">${d.presion_arterial || '—'}</td></tr>
       </table>
       <div class="resultado-bloque">
-        <span class="score-num">${d.score}</span>
-        <div>
-          <span class="clase-txt">${d.clase}</span>
-        </div>
+        <span class="score-num">Score: ${d.score}</span>
+        <div><strong class="clase-txt">${d.clase}</strong></div>
       </div>
       <table class="rep">
-        <tr><th style="width:170px">Diagnóstico del ECG</th><td>${d.ecg_dx || '—'}</td></tr>
+        <tr><th>Diagnóstico del ECG</th><td>${d.ecg_dx || '—'}</td></tr>
       </table>
       ${ecgHtml}
     </div>
@@ -337,27 +373,46 @@ async function descargarPDF() {
   window.print();
 }
 
+// ----- Limpia todos los campos del formulario -----
 function limpiar() {
   ['nombre', 'expediente', 'pab', 'cama', 'medico', 'edad', 'presion_arterial'].forEach(id => {
-    document.getElementById(id).value = '';
+    const el = document.getElementById(id);
+    if (el) el.value = '';
   });
-  document.getElementById('sexo').value = '';
-  document.getElementById('diagnostico').value = '';
+
+  const elSexo = document.getElementById('sexo');
+  if (elSexo) elSexo.value = '';
+
+  const elDiag = document.getElementById('diagnostico');
+  if (elDiag) elDiag.value = '';
 
   TODOS.forEach(it => {
     const btn = document.getElementById(it.id);
-    btn.dataset.val = '0';
-    btn.textContent = 'NO';
-    btn.classList.remove('si');
+    if (btn) {
+      btn.dataset.val = '0';
+      btn.textContent = 'NO';
+      btn.classList.remove('si');
+    }
   });
 
   establecerFechaHoy();
-  document.getElementById('ecg-dx').value = '';
-  document.getElementById('ecg-archivo').value = '';
-  document.getElementById('ecg-preview').innerHTML = '';
+  const elEcgDx = document.getElementById('ecg-dx');
+  if (elEcgDx) elEcgDx.value = '';
+
+  const elEcgArch = document.getElementById('ecg-archivo');
+  if (elEcgArch) elEcgArch.value = '';
+
+  const elEcgPrev = document.getElementById('ecg-preview');
+  if (elEcgPrev) elEcgPrev.innerHTML = '';
+
   ecgArchivo = null;
   ultimoIdGuardado = null;
-  document.getElementById('estado-guardado').textContent = '';
-  document.getElementById('estado-guardado').className = '';
+
+  const elEstado = document.getElementById('estado-guardado');
+  if (elEstado) {
+    elEstado.textContent = '';
+    elEstado.className = '';
+  }
+
   calcular();
 }
