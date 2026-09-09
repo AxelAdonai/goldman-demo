@@ -1,5 +1,5 @@
 // ============================================================
-// Índice de Goldman — Versión Cliente (Demo GitHub Pages)
+// Índice de Goldman — Versión Cliente con Historial y Escala
 // Autor: Axel Adonai
 // ============================================================
 
@@ -18,7 +18,7 @@ const GRUPOS = [
   {
     clave: 'ecg', titulo: 'Electrocardiograma', cont: 'g-ecg', items: [
       { id: 'ritmo', texto: 'Ritmo no sinusal ó extrasistolia supraventricular en el último ECG', puntos: 7 },
-      { id: 'ev5', texto: 'Más de 5 extrasístoles ventriculares/min en cualquier ECG preoperatorio', puntos: 7 },
+      { id: 'ev5', texto: 'Más de 5 extrasístoles ventriculares/min en cualquier ECG preop.', puntos: 7 },
     ]
   },
   {
@@ -66,6 +66,12 @@ function inicializar() {
   document.getElementById('btnGuardar').addEventListener('click', guardar);
   document.getElementById('btnPDF').addEventListener('click', descargarPDF);
   document.getElementById('btnLimpiar').addEventListener('click', limpiar);
+
+  // Eventos para el Modal de Historial
+  document.getElementById('btnVerRegistros').addEventListener('click', mostrarHistorial);
+  document.getElementById('cerrarModal').addEventListener('click', () => {
+    document.getElementById('modalRegistros').style.display = 'none';
+  });
 }
 
 function generarBotonesToggle() {
@@ -215,34 +221,24 @@ async function manejarArchivoECG(e) {
     }
   } catch (err) {
     console.error('Error al procesar el archivo ECG:', err);
-    let mensaje = 'No se pudo procesar el archivo. ';
-    if (err.message.includes('PDF') || err.message.includes('pdf')) {
-      mensaje += 'El PDF no es válido o está dañado. Intente convertirlo a imagen (JPG/PNG).';
-    } else {
-      mensaje += 'Intente con otra imagen o PDF.';
-    }
-    prev.innerHTML = `<span class="preview-error">${mensaje}</span>`;
+    prev.innerHTML = `<span class="preview-error">Error al cargar el archivo ECG.</span>`;
     ecgArchivo = null;
     e.target.value = '';
   }
 }
 
 async function validarPDF(archivo) {
-  try {
-    const buffer = await archivo.arrayBuffer();
-    const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
-    if (pdf.numPages === 0) throw new Error('El PDF no contiene páginas.');
-    await pdf.getPage(1);
-  } catch (err) {
-    throw new Error('PDF inválido: ' + (err.message || ''));
-  }
+  const buffer = await archivo.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
+  if (pdf.numPages === 0) throw new Error('PDF sin páginas.');
+  await pdf.getPage(1);
 }
 
 function leerComoDataURL(archivo) {
   return new Promise((resolve, reject) => {
     const lector = new FileReader();
     lector.onload = ev => resolve(ev.target.result);
-    lector.onerror = () => reject(new Error('No se pudo leer el archivo'));
+    lector.onerror = () => reject(new Error('Error de lectura'));
     lector.readAsDataURL(archivo);
   });
 }
@@ -251,11 +247,7 @@ async function convertirPdfAImagen(archivo) {
   const buffer = await archivo.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
   const pagina = await pdf.getPage(1);
-
-  const ANCHO_OBJETIVO = 2338;
-  const viewportBase = pagina.getViewport({ scale: 1 });
-  const escala = Math.max(2.0, ANCHO_OBJETIVO / viewportBase.width);
-  const viewport = pagina.getViewport({ scale: escala });
+  const viewport = pagina.getViewport({ scale: 2.0 });
 
   const canvas = document.createElement('canvas');
   canvas.width = viewport.width;
@@ -294,9 +286,7 @@ async function guardar() {
   return d;
 }
 
-// ============================================================
-// Generar e imprimir reporte idéntico al formato PDF del HGM
-// ============================================================
+// ----- Generación de Formato Oficial e Impresión -----
 async function descargarPDF() {
   if (!ultimoIdGuardado) {
     try {
@@ -308,10 +298,8 @@ async function descargarPDF() {
 
   const d = datosActuales();
   const contenedor = document.getElementById('reporte-impresion');
-
   if (!contenedor) return;
 
-  // Calculo de puntos por criterio
   const edadPts = (d.edad > 70) ? 5 : 0;
   const im6mPts = d.respuestas.im6m ? 10 : 0;
   const s3pvyPts = d.respuestas.s3pvy ? 11 : 0;
@@ -324,7 +312,6 @@ async function descargarPDF() {
   const estadoAlterado = d.respuestas.gases || d.respuestas.iones || d.respuestas.renal || d.respuestas.hepat || d.respuestas.encam;
   const estadoPts = estadoAlterado ? 3 : 0;
 
-  // Tabla de criterios
   let filas = '<tr class="rep-grupo"><td colspan="3">HISTORIA</td></tr>';
   filas += `<tr><td>Infarto de miocardio en los 6 meses previos</td><td style="text-align:center">${d.respuestas.im6m ? 'SI' : 'NO'}</td><td style="text-align:center">${im6mPts}</td></tr>`;
   filas += `<tr><td>Edad &gt; 70 años</td><td style="text-align:center">${d.edad > 70 ? 'SI' : 'NO'}</td><td style="text-align:center">${edadPts}</td></tr>`;
@@ -349,7 +336,6 @@ async function descargarPDF() {
   filas += `<tr><td>Intraperitoneal, intratorácica ó aórtica</td><td style="text-align:center">${d.respuestas.ciralto ? 'SI' : 'NO'}</td><td style="text-align:center">${ciraltoPts}</td></tr>`;
   filas += `<tr><td>Urgente</td><td style="text-align:center">${d.respuestas.cirurg ? 'SI' : 'NO'}</td><td style="text-align:center">${cirurgPts}</td></tr>`;
 
-  // ECG adjunto
   let ecgHtml = '';
   if (d.ecg_archivo && d.ecg_archivo.datos) {
     ecgHtml = `
@@ -361,7 +347,7 @@ async function descargarPDF() {
       </div>`;
   }
 
-  // Tabla de referencia de clases
+  // ESCALA DE REFERENCIA GOLDMAN
   const refClases = [
     { n: 'I', rng: '0–5', m: '0,20%', r: 'Bajo' },
     { n: 'II', rng: '6–12', m: '1,50%', r: 'Intermedio' },
@@ -389,7 +375,7 @@ async function descargarPDF() {
     <div class="contenido">
       <table class="rep">
         <tr><th>Nombre del paciente</th><td colspan="3">${d.nombre}</td></tr>
-        <tr><th style="width:130px">Expediente</th><td style="width:130px">${d.expediente}</td><th style="width:80px">PAB</th><td>${d.pab || '—'}</td></tr>
+        <tr><th style="width:120px">Expediente</th><td style="width:120px">${d.expediente}</td><th style="width:70px">PAB</th><td>${d.pab || '—'}</td></tr>
         <tr><th>Cama</th><td>${d.cama || '—'}</td><th>Sexo</th><td>${d.sexo || '—'}</td></tr>
         <tr><th>Edad</th><td>${d.edad} años</td><th>Fecha</th><td>${d.fecha}</td></tr>
         <tr><th>Médico</th><td colspan="3">${d.medico || '—'}</td></tr>
@@ -398,7 +384,7 @@ async function descargarPDF() {
       </table>
 
       <table class="rep">
-        <thead><tr><th>Criterio</th><th style="width:90px;text-align:center">Respuesta</th><th style="width:80px;text-align:center">Puntos</th></tr></thead>
+        <thead><tr><th>Criterio</th><th style="width:80px;text-align:center">Respuesta</th><th style="width:70px;text-align:center">Puntos</th></tr></thead>
         <tbody>
           ${filas}
           <tr><th colspan="2" style="text-align:right">TOTAL</th><th style="text-align:center;font-size:1rem">${d.score}</th></tr>
@@ -409,12 +395,12 @@ async function descargarPDF() {
         <span class="score-num">${d.score}</span>
         <div>
           <span class="clase-txt">${d.clase}</span>
-          <div class="mort-txt">${cClase ? cClase.m : ''}</div>
+          <div style="font-size:11px">${cClase ? cClase.m : ''}</div>
         </div>
       </div>
 
       <table class="rep">
-        <tr><th style="width:170px">Diagnóstico del ECG</th><td>${d.ecg_dx || '—'}</td></tr>
+        <tr><th style="width:150px">Diagnóstico del ECG</th><td>${d.ecg_dx || '—'}</td></tr>
       </table>
 
       ${ecgHtml}
@@ -430,11 +416,98 @@ async function descargarPDF() {
         <div>Nombre y firma del médico</div>
       </div>
 
-      <p class="pie">Adaptado de Goldman L, et al. N Engl J Med 1977;297:845. &nbsp;|&nbsp; ID Registro: ${d.id} &nbsp;|&nbsp; ${d.fecha}</p>
+      <p class="pie">Adaptado de Goldman L, et al. N Engl J Med 1977;297:845. | ID Registro: ${d.id} | ${d.fecha}</p>
     </div>
   `;
 
   window.print();
+}
+
+// ----- Gestión del Historial (localStorage) -----
+function mostrarHistorial() {
+  const modal = document.getElementById('modalRegistros');
+  const contenedor = document.getElementById('listaRegistros');
+  const registros = JSON.parse(localStorage.getItem('tb_goldman') || '[]');
+
+  if (registros.length === 0) {
+    contenedor.innerHTML = '<p style="text-align:center; padding:15px; color:#666;">No hay registros guardados localmente.</p>';
+  } else {
+    let html = `
+      <table class="tabla-historial">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Paciente</th>
+            <th>Expediente</th>
+            <th>Score</th>
+            <th>Clase</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody>`;
+
+    registros.forEach(r => {
+      html += `
+        <tr>
+          <td>${r.fecha}</td>
+          <td><strong>${r.nombre}</strong></td>
+          <td>${r.expediente}</td>
+          <td>${r.score} pts</td>
+          <td>${r.clase}</td>
+          <td>
+            <button class="btn-acc cargar" onclick="cargarRegistro(${r.id})">👁️ Ver</button>
+            <button class="btn-acc borrar" onclick="eliminarRegistro(${r.id})">🗑️ Borrar</button>
+          </td>
+        </tr>`;
+    });
+
+    html += '</tbody></table>';
+    contenedor.innerHTML = html;
+  }
+
+  modal.style.display = 'block';
+}
+
+function cargarRegistro(id) {
+  const registros = JSON.parse(localStorage.getItem('tb_goldman') || '[]');
+  const r = registros.find(item => item.id === id);
+  if (!r) return;
+
+  document.getElementById('nombre').value = r.nombre;
+  document.getElementById('expediente').value = r.expediente;
+  document.getElementById('pab').value = r.pab || '';
+  document.getElementById('cama').value = r.cama || '';
+  document.getElementById('sexo').value = r.sexo || '';
+  document.getElementById('diagnostico').value = r.diagnostico || '';
+  document.getElementById('fecha').value = r.fecha;
+  document.getElementById('medico').value = r.medico || '';
+  document.getElementById('edad').value = r.edad;
+  document.getElementById('presion_arterial').value = r.presion_arterial || '';
+  document.getElementById('ecg-dx').value = r.ecg_dx || '';
+
+  TODOS.forEach(it => {
+    const btn = document.getElementById(it.id);
+    if (btn && r.respuestas) {
+      const val = r.respuestas[it.id] ? '1' : '0';
+      btn.dataset.val = val;
+      btn.textContent = val === '1' ? 'SI' : 'NO';
+      btn.classList.toggle('si', val === '1');
+    }
+  });
+
+  ultimoIdGuardado = r.id;
+  ecgArchivo = r.ecg_archivo || null;
+
+  calcular();
+  document.getElementById('modalRegistros').style.display = 'none';
+}
+
+function eliminarRegistro(id) {
+  if (!confirm('¿Desea eliminar este registro?')) return;
+  let registros = JSON.parse(localStorage.getItem('tb_goldman') || '[]');
+  registros = registros.filter(r => r.id !== id);
+  localStorage.setItem('tb_goldman', JSON.stringify(registros));
+  mostrarHistorial();
 }
 
 function limpiar() {

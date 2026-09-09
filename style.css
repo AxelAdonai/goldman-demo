@@ -32,9 +32,8 @@ body {
 }
 
 .encabezado img {
-  height: 70px;
+  height: 60px;
   width: auto;
-  flex-shrink: 0;
 }
 
 .titulos {
@@ -205,11 +204,11 @@ main {
 
 .botones button {
   flex: 1;
-  min-width: 120px;
-  padding: 13px 10px;
+  min-width: 140px;
+  padding: 12px 10px;
   border: none;
   border-radius: 10px;
-  font-size: .95rem;
+  font-size: .9rem;
   font-weight: 700;
   cursor: pointer;
   transition: all .2s;
@@ -232,6 +231,15 @@ main {
 
 .btn-descargar:hover {
   background: #4a0d26;
+}
+
+.btn-historial {
+  background: #2563eb;
+  color: #fff;
+}
+
+.btn-historial:hover {
+  background: #1d4ed8;
 }
 
 .btn-limpiar {
@@ -283,24 +291,103 @@ main {
   background: #f8f9fa;
 }
 
-/* Ocultar el reporte de impresión en pantalla normal */
+/* ===== MODAL DE HISTORIAL ===== */
+.modal {
+  position: fixed;
+  z-index: 1000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.modal-contenido {
+  background-color: #fff;
+  margin: 5% auto;
+  padding: 20px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 700px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid var(--verde);
+  padding-bottom: 10px;
+  margin-bottom: 15px;
+}
+
+.modal-header h3 {
+  color: var(--verde);
+  margin: 0;
+}
+
+.cerrar {
+  font-size: 24px;
+  font-weight: bold;
+  cursor: pointer;
+  color: #666;
+}
+
+.tabla-historial {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla-historial th,
+.tabla-historial td {
+  border: 1px solid #e2e8e8;
+  padding: 8px 10px;
+  font-size: .85rem;
+  text-align: left;
+}
+
+.tabla-historial th {
+  background-color: var(--verde);
+  color: #fff;
+}
+
+.btn-acc {
+  padding: 4px 8px;
+  border: none;
+  border-radius: 5px;
+  font-size: .78rem;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.btn-acc.cargar {
+  background: #e0f2fe;
+  color: #0369a1;
+}
+
+.btn-acc.borrar {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+/* Ocultar contenedor de impresión en pantalla normal */
 #reporte-impresion {
   display: none;
 }
 
 /* ============================================================
-   REGLAS DE IMPRESIÓN (PDF Y FORMATO OFICIAL)
+   REGLAS DE IMPRESIÓN (FORMATO OFICIAL HGM)
    ============================================================ */
 @media print {
 
-  /* Ocultar la aplicación web */
   header,
   main,
   .encabezado,
   .tarjeta,
   .botones,
   #estado-guardado,
-  .aviso {
+  .aviso,
+  .modal {
     display: none !important;
   }
 
@@ -311,8 +398,8 @@ main {
 
   body {
     background: #fff !important;
-    color: #1c2b2d !important;
-    font-size: 11px;
+    color: #000 !important;
+    font-size: 10px;
     padding: 0;
     margin: 0;
   }
@@ -330,13 +417,13 @@ main {
     align-items: center;
     justify-content: space-between;
     border-bottom: 3px solid #611232;
-    padding-bottom: 8px;
-    margin-bottom: 10px;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
   }
 
   .rep-logo {
-    max-height: 50px;
-    max-width: 100px;
+    max-height: 45px;
+    max-width: 90px;
     object-fit: contain;
   }
 
@@ -346,20 +433,20 @@ main {
   }
 
   .rep-titulo h1 {
-    font-size: 12px;
+    font-size: 11px;
     color: #611232;
     margin: 0;
     text-transform: uppercase;
   }
 
   .rep-titulo h2 {
-    font-size: 10px;
+    font-size: 9.5px;
     margin: 2px 0 0;
     font-weight: 600;
   }
 
   .rep-titulo h3 {
-    font-size: 9px;
+    font-size: 8.5px;
     margin: 2px 0 0;
     color: #444;
   }
@@ -367,16 +454,16 @@ main {
   table.rep {
     width: 100%;
     border-collapse: collapse;
-    margin: 6px 0;
+    margin: 5px 0;
   }
 
   table.rep th,
   table.rep td {
     border: 1px solid #555;
-    padding: 4px 6px;
+    padding: 3px 5px;
     text-align: left;
     vertical-align: middle;
-    font-size: 10px;
+    font-size: 9.5px;
   }
 
   table.rep th {
@@ -390,19 +477,19 @@ main {
     background: #f3e8ee !important;
     font-weight: bold;
     text-transform: uppercase;
-    font-size: 9px;
+    font-size: 8.5px;
     color: #611232;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
 
   .resultado-bloque {
-    margin: 8px 0;
-    padding: 8px 14px;
+    margin: 6px 0;
+    padding: 6px 12px;
     border-radius: 6px;
     display: flex;
     align-items: center;
-    gap: 15px;
+    gap: 12px;
     background: #f8f9fa !important;
     border: 2px solid #0d5c63;
     -webkit-print-color-adjust: exact;
@@ -410,56 +497,33 @@ main {
   }
 
   .score-num {
-    font-size: 22px;
+    font-size: 20px;
     font-weight: 900;
     color: #0d5c63;
   }
 
   .clase-txt {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: bold;
   }
 
-  .ecg-bloque {
-    margin-top: 10px;
-    page-break-inside: avoid;
-  }
-
-  .ecg-titulo {
-    font-weight: bold;
-    font-size: 10px;
-    margin-bottom: 4px;
-  }
-
-  .rep-ecg {
-    max-width: 100%;
-    max-height: 250px;
-    display: block;
-    margin: 0 auto;
-    object-fit: contain;
-    border: 1px solid #ddd;
-  }
-}
-
-@media print {
-
-  /* Estilos específicos para la tabla de referencia de clases */
   table.ref {
     width: 100%;
     border-collapse: collapse;
-    margin: 8px 0;
-    font-size: 10px;
+    margin: 6px 0;
   }
 
   table.ref th,
   table.ref td {
-    border: 1px solid #777;
-    padding: 3px 6px;
+    border: 1px solid #666;
+    padding: 3px 5px;
     text-align: center;
+    font-size: 9px;
   }
 
   table.ref th {
     background: #e8e8e8 !important;
+    font-weight: bold;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
@@ -471,28 +535,48 @@ main {
     print-color-adjust: exact;
   }
 
-  /* Bloque de firma del médico */
+  .ecg-bloque {
+    margin-top: 8px;
+    page-break-inside: avoid;
+  }
+
+  .ecg-titulo {
+    font-weight: bold;
+    font-size: 9.5px;
+    margin-bottom: 3px;
+  }
+
+  .rep-ecg {
+    max-width: 100%;
+    max-height: 220px;
+    display: block;
+    margin: 0 auto;
+    object-fit: contain;
+    border: 1px solid #ddd;
+  }
+
   .rep-firma {
-    margin-top: 30px;
+    margin-top: 25px;
     text-align: center;
     page-break-inside: avoid;
   }
 
   .rep-firma .linea {
     border-top: 1px solid #000;
-    width: 240px;
-    margin: 0 auto 4px;
+    width: 220px;
+    margin: 0 auto 3px;
   }
 
   .rep-firma .nombre-med {
     font-weight: bold;
+    font-size: 10px;
   }
 
   .pie {
-    font-size: 9px;
+    font-size: 8.5px;
     color: #555;
-    margin-top: 10px;
+    margin-top: 8px;
     border-top: 1px solid #ccc;
-    padding-top: 4px;
+    padding-top: 3px;
   }
 }

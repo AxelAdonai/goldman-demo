@@ -6,50 +6,56 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Índice de Goldman — Riesgo Cardiovascular Preoperatorio</title>
   <link rel="stylesheet" href="style.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+  <script>
+    if (window.pdfjsLib) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+    }
+  </script>
 </head>
 
 <body>
+
   <header class="encabezado">
-    <div class="logo-wrap">
-      <img src="logo-hgm.png" alt="Logo HGM" onerror="this.style.display='none'">
-    </div>
+    <img src="logo-hgm.png" alt="Hospital General de México">
     <div class="titulos">
-      <h1>Hospital General de México &ldquo;Dr. Eduardo Liceaga&rdquo;</h1>
+      <h1>Hospital General de México "Dr. Eduardo Liceaga"</h1>
       <h2>Índice de Goldman de riesgo cardiaco — Valoración Preoperatoria</h2>
     </div>
+    <img src="logo-hgm.png" alt="Hospital General de México">
   </header>
 
   <main>
-    <div class="tarjeta">
+    <!-- Datos del Paciente -->
+    <section class="tarjeta">
       <h3>Datos del paciente</h3>
       <div class="fila">
         <label for="nombre">Nombre del paciente</label>
-        <input type="text" id="nombre" required>
+        <input type="text" id="nombre" placeholder="Nombre completo">
       </div>
       <div class="fila">
         <label for="expediente">No. de expediente</label>
-        <input type="text" id="expediente" required>
+        <input type="text" id="expediente" placeholder="Ej. 123456">
       </div>
       <div class="fila">
         <label for="pab">Pabellón</label>
-        <input type="text" id="pab" placeholder="">
+        <input type="text" id="pab" placeholder="PAB">
       </div>
       <div class="fila">
         <label for="cama">Cama</label>
-        <input type="text" id="cama" placeholder="Número o ubicación">
+        <input type="text" id="cama" placeholder="Número de cama">
       </div>
       <div class="fila">
         <label for="sexo">Sexo</label>
         <select id="sexo">
-          <option value="">Seleccione</option>
-          <option value="M">M</option>
-          <option value="F">F</option>
-          <option value="Otro">Otro</option>
+          <option value="">Seleccione...</option>
+          <option value="M">Masculino (M)</option>
+          <option value="F">Femenino (F)</option>
         </select>
       </div>
-      <div class="fila fila-col">
+      <div class="fila">
         <label for="diagnostico">Diagnóstico</label>
-        <textarea id="diagnostico" rows="2" placeholder="Describa el diagnóstico clínico"></textarea>
+        <textarea id="diagnostico" rows="2" placeholder="Diagnóstico principal"></textarea>
       </div>
       <div class="fila">
         <label for="fecha">Fecha de valoración</label>
@@ -57,77 +63,90 @@
       </div>
       <div class="fila">
         <label for="medico">Médico que valora</label>
-        <input type="text" id="medico">
+        <input type="text" id="medico" placeholder="Nombre del médico">
       </div>
-    </div>
+      <div class="fila">
+        <label for="presion_arterial">Presión arterial</label>
+        <input type="text" id="presion_arterial" placeholder="Ej. 120/80 mmHg">
+      </div>
+    </section>
 
-    <div class="tarjeta">
+    <!-- Criterios Evaluados -->
+    <section class="tarjeta">
       <h3>Índice de Goldman de riesgo cardiaco</h3>
 
-      <div class="grupo">Historia</div>
+      <div class="grupo">HISTORIA</div>
       <div class="fila">
-        <label for="edad">Edad (años) <span class="pts">(&gt; 70 años: 5 pts)</span></label>
-        <input type="number" id="edad" class="edad-input" min="0" max="120">
+        <label for="edad">Edad (años) <span class="pts">(> 70 años: 5 pts)</span></label>
+        <input type="number" id="edad" class="edad-input" min="0" max="120" placeholder="0">
       </div>
       <div id="g-historia"></div>
 
-      <div class="grupo">Exploración</div>
+      <div class="grupo">EXPLORACIÓN</div>
       <div id="g-exploracion"></div>
-      <div class="fila">
-        <label for="presion_arterial">Presión arterial</label>
-        <input type="text" id="presion_arterial" placeholder="">
-      </div>
 
-      <div class="grupo">Electrocardiograma</div>
+      <div class="grupo">ELECTROCARDIOGRAMA</div>
       <div id="g-ecg"></div>
-      <div class="fila fila-col">
-        <label for="ecg-dx">Diagnóstico del ECG</label>
-        <textarea id="ecg-dx" rows="2" placeholder="Describa el hallazgo o interpretación del ECG"></textarea>
-      </div>
-      <div class="fila fila-col">
-        <label for="ecg-archivo">Adjuntar ECG (foto o PDF)</label>
-        <input type="file" id="ecg-archivo" accept="image/*,application/pdf">
-        <div id="ecg-preview"></div>
-      </div>
 
-      <div class="grupo">Estado general</div>
-      <div class="nota-grupo">Cualquiera de los siguientes suma 3 puntos:</div>
+      <div class="grupo">ESTADO GENERAL</div>
+      <p class="nota-grupo">Si presenta cualquiera de los siguientes criterios, se otorgan 3 pts en total:</p>
       <div id="g-estado"></div>
 
-      <div class="grupo">Intervención quirúrgica</div>
+      <div class="grupo">INTERVENCIÓN QUIRÚRGICA</div>
       <div id="g-cirugia"></div>
 
+      <!-- Resultado Dinámico -->
       <div class="resultado">
-        <div>Score <span class="score" id="score">…</span></div>
-        <div class="clase" id="clase"></div>
-        <div class="mortalidad" id="mortalidad"></div>
+        <div>Score <span id="score" class="score">…</span></div>
+        <div id="clase" class="clase"></div>
+        <div id="mortalidad" class="mortalidad"></div>
       </div>
+    </section>
+
+    <!-- Electrocardiograma -->
+    <section class="tarjeta">
+      <h3>Electrocardiograma (ECG)</h3>
+      <div class="fila">
+        <label for="ecg-dx">Diagnóstico del ECG</label>
+        <input type="text" id="ecg-dx" placeholder="Ritmo sinusal, trazado normal, etc.">
+      </div>
+      <div class="fila">
+        <label for="ecg-archivo">Adjuntar trazado ECG (Imagen / PDF)</label>
+        <input type="file" id="ecg-archivo" accept="image/*,application/pdf">
+      </div>
+      <div id="ecg-preview"></div>
+    </section>
+
+    <!-- Botones de Acción -->
+    <div class="botones">
+      <button type="button" id="btnGuardar" class="btn-guardar">Guardar en base de datos</button>
+      <button type="button" id="btnPDF" class="btn-descargar">Descargar formato</button>
+      <button type="button" id="btnVerRegistros" class="btn-historial">📋 Ver registros guardados</button>
+      <button type="button" id="btnLimpiar" class="btn-limpiar">Limpiar</button>
     </div>
 
-    <div class="tarjeta">
-      <div class="botones">
-        <button class="btn-guardar" id="btnGuardar"> Guardar registro (Demo)</button>
-        <button class="btn-descargar" id="btnPDF"> Descargar / Imprimir formato</button>
-        <button class="btn-limpiar" id="btnLimpiar"> Limpiar</button>
-      </div>
-      <div id="estado-guardado"></div>
-      <p class="aviso">
-        Herramienta de apoyo clínico. El resultado no sustituye el juicio médico.<br>
-        Los datos se procesan y almacenan de forma local en la demostración.<br>
-        <span class="aviso-citation">Adaptado de Goldman L, et al. N Engl J Med 1977;297:845.</span>
-      </p>
-    </div>
+    <div id="estado-guardado"></div>
+
+    <p class="aviso">
+      Herramienta de apoyo clínico. El resultado no sustituye el juicio médico.<br>
+      Adaptado de Goldman L, et al. N Engl J Med 1977;297:845.
+    </p>
   </main>
 
+  <!-- Ventana Modal de Historial -->
+  <div id="modalRegistros" class="modal" style="display:none;">
+    <div class="modal-contenido">
+      <div class="modal-header">
+        <h3>Historial de Registros Guardados</h3>
+        <span id="cerrarModal" class="cerrar">&times;</span>
+      </div>
+      <div id="listaRegistros"></div>
+    </div>
+  </div>
+
+  <!-- Contenedor Oculto para Generar el Reporte de Impresión -->
   <div id="reporte-impresion"></div>
 
-  <!-- pdf.js almacenado localmente -->
-  <script src="libs/pdfjs/pdf.min.js"></script>
-  <script>
-    if (typeof pdfjsLib !== 'undefined') {
-      pdfjsLib.GlobalWorkerOptions.workerSrc = 'libs/pdfjs/pdf.worker.min.js';
-    }
-  </script>
   <script src="script.js"></script>
 </body>
 
