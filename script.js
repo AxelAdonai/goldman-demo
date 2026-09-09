@@ -1,9 +1,8 @@
 // ============================================================
-// Índice de Goldman
+// Índice de Goldman - Versión Cliente (Demo GitHub Pages)
 // Autor: Axel Adonai
 // ============================================================
 
-// ----- Criterios clínicos del índice -----
 const GRUPOS = [
   {
     clave: 'historia', titulo: 'Historia', cont: 'g-historia', items: [
@@ -40,25 +39,21 @@ const GRUPOS = [
 ];
 const TODOS = GRUPOS.flatMap(g => g.items);
 
-// ----- Clasificación de riesgo -----
 const CLASES = [
   { max: 5, n: 'I', t: 'Clase I (Riesgo Bajo)', m: 'Mortalidad estimada: 0,20%', c: 'c1' },
   { max: 12, n: 'II', t: 'Clase II (Riesgo Intermedio)', m: 'Mortalidad estimada: 1,50%', c: 'c2' },
   { max: 25, n: 'III', t: 'Clase III (Alto Riesgo)', m: 'Mortalidad estimada: 2,30%', c: 'c3' },
   { max: Infinity, n: 'IV', t: 'Clase IV (Riesgo Muy Alto)', m: 'Mortalidad estimada: 56%', c: 'c4' },
 ];
+
 function clasificar(score) {
   return CLASES.find(c => score <= c.max);
 }
 
 const LIMITE_ARCHIVO_MB = 8;
-
-// ----- Estado de sesión -----
 let ecgArchivo = null;
 let ultimoIdGuardado = null;
-let ultimoPdfRuta = null;
 
-// ----- Inicio -----
 document.addEventListener('DOMContentLoaded', inicializar);
 
 function inicializar() {
@@ -73,7 +68,6 @@ function inicializar() {
   document.getElementById('btnLimpiar').addEventListener('click', limpiar);
 }
 
-// ----- Genera los botones SI/NO por grupo -----
 function generarBotonesToggle() {
   GRUPOS.forEach(g => {
     const cont = document.getElementById(g.cont);
@@ -89,7 +83,6 @@ function generarBotonesToggle() {
   });
 }
 
-// ----- Alterna el valor de un criterio -----
 function alternarToggle() {
   const marcar = this.dataset.val === '0';
   this.dataset.val = marcar ? '1' : '0';
@@ -111,7 +104,6 @@ function establecerFechaHoy() {
   if (el) el.value = fechaHoyISO();
 }
 
-// ----- Cálculo del score Goldman -----
 function calcular() {
   const edad = parseInt(document.getElementById('edad').value);
   let total = (edad > 70) ? 5 : 0;
@@ -143,7 +135,6 @@ function calcular() {
   return total;
 }
 
-// ----- Recopila datos del formulario -----
 function datosActuales() {
   const edad = parseInt(document.getElementById('edad').value);
   const respuestas = {};
@@ -171,10 +162,6 @@ function datosActuales() {
     clase: c ? c.t : '',
   };
 }
-
-// ============================================================
-// Manejo del archivo ECG (imagen o PDF)
-// ============================================================
 
 async function manejarArchivoECG(e) {
   const archivo = e.target.files[0];
@@ -224,7 +211,6 @@ async function manejarArchivoECG(e) {
   }
 }
 
-// ----- Valida que el PDF sea legible -----
 async function validarPDF(archivo) {
   try {
     const buffer = await archivo.arrayBuffer();
@@ -245,13 +231,11 @@ function leerComoDataURL(archivo) {
   });
 }
 
-// ----- Convierte la primera página del PDF a imagen PNG -----
 async function convertirPdfAImagen(archivo) {
   const buffer = await archivo.arrayBuffer();
   const pdf = await pdfjsLib.getDocument({ data: buffer }).promise;
   const pagina = await pdf.getPage(1);
 
-  // Escala dinámica: ancho objetivo A4 landscape a 200 dpi
   const ANCHO_OBJETIVO = 2338;
   const viewportBase = pagina.getViewport({ scale: 1 });
   const escala = Math.max(2.0, ANCHO_OBJETIVO / viewportBase.width);
@@ -265,9 +249,6 @@ async function convertirPdfAImagen(archivo) {
   return canvas.toDataURL('image/png');
 }
 
-// ============================================================
-// Guardar registro en la base de datos
-// ============================================================
 async function guardar() {
   const d = datosActuales();
   const estado = document.getElementById('estado-guardado');
@@ -281,35 +262,22 @@ async function guardar() {
   estado.textContent = ' Guardando...';
   estado.className = 'cargando';
 
-  try {
-    const resp = await fetch('guardar.php', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(d)
-    });
-    const data = await resp.json();
-
-    if (!data.ok) {
-      estado.textContent = ' Error: ' + (data.error || 'desconocido');
-      estado.className = 'error';
-      return Promise.reject(data.error);
-    }
-
-    ultimoIdGuardado = data.id;
-    ultimoPdfRuta = data.pdf_ruta;
-    estado.textContent = data.actualizado
-      ? '✅ Registro actualizado (ID: ' + data.id + ')'
-      : '✅ Registro guardado exitosamente (ID: ' + data.id + ')';
-    estado.className = 'ok';
-    return data;
-  } catch (e) {
-    estado.textContent = ' No se pudo conectar con el servidor.';
-    estado.className = 'error';
-    return Promise.reject(e);
+  d.id = d.id || Date.now();
+  let registros = JSON.parse(localStorage.getItem('tb_goldman') || '[]');
+  const idx = registros.findIndex(r => r.id === d.id);
+  if (idx !== -1) {
+    registros[idx] = d;
+  } else {
+    registros.push(d);
   }
+  localStorage.setItem('tb_goldman', JSON.stringify(registros));
+
+  ultimoIdGuardado = d.id;
+  estado.textContent = '✅ Registro guardado exitosamente (ID: ' + d.id + ')';
+  estado.className = 'ok';
+  return d;
 }
 
-// ----- Abre el reporte imprimible en nueva pestaña -----
 async function descargarPDF() {
   if (!ultimoIdGuardado) {
     try {
@@ -319,18 +287,56 @@ async function descargarPDF() {
     }
   }
 
-  if (!ultimoPdfRuta) {
-    alert('No se pudo generar el formato. Intente guardar de nuevo.');
-    return;
+  const d = datosActuales();
+  const contenedor = document.getElementById('reporte-impresion');
+
+  let ecgHtml = '';
+  if (d.ecg_archivo && d.ecg_archivo.datos) {
+    ecgHtml = `
+      <div class="ecg-bloque">
+        <p class="ecg-titulo">ECG adjunto — ${d.nombre} | Exp. ${d.expediente} | ${d.fecha}</p>
+        <div class="ecg-image-container">
+          <img src="${d.ecg_archivo.datos}" class="rep-ecg" alt="ECG">
+        </div>
+      </div>`;
   }
 
-  const ventana = window.open(ultimoPdfRuta, '_blank');
-  if (!ventana) {
-    alert('Por favor, permita las ventanas emergentes para poder imprimir el formato.');
-  }
+  contenedor.innerHTML = `
+    <div class="rep-encabezado">
+      <img src="logo-hgm.png" alt="Logo HGM" class="rep-logo">
+      <div class="rep-titulo">
+        <h1>Hospital General de México "Dr. Eduardo Liceaga"</h1>
+        <h2>Valoración perioperatoria de riesgo cardiovascular</h2>
+        <h3>Índice de Goldman de riesgo cardiaco</h3>
+      </div>
+      <img src="logo-hgm.png" alt="Logo HGM" class="rep-logo">
+    </div>
+    <div class="contenido">
+      <table class="rep">
+        <tr><th>Nombre del paciente</th><td colspan="3">${d.nombre}</td></tr>
+        <tr><th style="width:130px">Expediente</th><td style="width:130px">${d.expediente}</td><th style="width:80px">PAB</th><td>${d.pab || '—'}</td></tr>
+        <tr><th>Cama</th><td>${d.cama || '—'}</td><th>Sexo</th><td>${d.sexo || '—'}</td></tr>
+        <tr><th>Edad</th><td>${d.edad} años</td><th>Fecha</th><td>${d.fecha}</td></tr>
+        <tr><th>Médico</th><td colspan="3">${d.medico || '—'}</td></tr>
+        <tr><th>Diagnóstico</th><td colspan="3">${d.diagnostico || '—'}</td></tr>
+        <tr><th>Presión arterial</th><td colspan="3">${d.presion_arterial || '—'}</td></tr>
+      </table>
+      <div class="resultado-bloque">
+        <span class="score-num">${d.score}</span>
+        <div>
+          <span class="clase-txt">${d.clase}</span>
+        </div>
+      </div>
+      <table class="rep">
+        <tr><th style="width:170px">Diagnóstico del ECG</th><td>${d.ecg_dx || '—'}</td></tr>
+      </table>
+      ${ecgHtml}
+    </div>
+  `;
+
+  window.print();
 }
 
-// ----- Limpia todos los campos del formulario -----
 function limpiar() {
   ['nombre', 'expediente', 'pab', 'cama', 'medico', 'edad', 'presion_arterial'].forEach(id => {
     document.getElementById(id).value = '';
@@ -351,7 +357,6 @@ function limpiar() {
   document.getElementById('ecg-preview').innerHTML = '';
   ecgArchivo = null;
   ultimoIdGuardado = null;
-  ultimoPdfRuta = null;
   document.getElementById('estado-guardado').textContent = '';
   document.getElementById('estado-guardado').className = '';
   calcular();

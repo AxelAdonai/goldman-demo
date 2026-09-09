@@ -4,22 +4,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <!-- Formulario principal del Índice de Goldman -->
-  <title>Índice de Goldman — Riesgo Cardiovascular Pre-operatorioperatorio</title>
+  <title>Índice de Goldman — Riesgo Cardiovascular Preoperatorio</title>
   <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
   <header class="encabezado">
-    <a href="/torre_de_control_A/goldman/ver_registros.php" title="Ver registros">
+    <div class="logo-wrap">
       <img src="logo-hgm.png" alt="Logo HGM" onerror="this.style.display='none'">
-    </a>
+    </div>
     <div class="titulos">
       <h1>Hospital General de México &ldquo;Dr. Eduardo Liceaga&rdquo;</h1>
-      <h2>Índice de Goldman de riesgo cardiaco — Valoración Pre-operatorioperatorio</h2>
-    </div>
-    <div class="acciones">
-      <a href="/torre_de_control_A/dashboard.php" class="btn-volver">Volver a Torre Quirúrgica</a>
+      <h2>Índice de Goldman de riesgo cardiaco — Valoración Preoperatoria</h2>
     </div>
   </header>
 
@@ -35,7 +31,7 @@
         <input type="text" id="expediente" required>
       </div>
       <div class="fila">
-        <label for="pab">pabellón</label>
+        <label for="pab">Pabellón</label>
         <input type="text" id="pab" placeholder="">
       </div>
       <div class="fila">
@@ -110,28 +106,29 @@
 
     <div class="tarjeta">
       <div class="botones">
-        <button class="btn-guardar" id="btnGuardar"> Guardar en base de datos</button>
-        <button class="btn-descargar" id="btnPDF"> Descargar formato</button>
+        <button class="btn-guardar" id="btnGuardar"> Guardar registro (Demo)</button>
+        <button class="btn-descargar" id="btnPDF"> Descargar / Imprimir formato</button>
         <button class="btn-limpiar" id="btnLimpiar"> Limpiar</button>
-        <!-- Botón eliminado: ahora el logo dirige a ver_registros.php -->
       </div>
       <div id="estado-guardado"></div>
       <p class="aviso">
         Herramienta de apoyo clínico. El resultado no sustituye el juicio médico.<br>
-        Los datos se transmiten al servidor institucional y se almacenan cifrados.<br>
+        Los datos se procesan y almacenan de forma local en la demostración.<br>
         <span class="aviso-citation">Adaptado de Goldman L, et al. N Engl J Med 1977;297:845.</span>
       </p>
     </div>
   </main>
 
-  <div id="reporte"></div>
+  <div id="reporte-impresion"></div>
 
-  <!-- pdf.js almacenado localmente-->
+  <!-- pdf.js almacenado localmente -->
   <script src="libs/pdfjs/pdf.min.js"></script>
   <script>
-    pdfjsLib.GlobalWorkerOptions.workerSrc = 'libs/pdfjs/pdf.worker.min.js';
+    if (typeof pdfjsLib !== 'undefined') {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = 'libs/pdfjs/pdf.worker.min.js';
+    }
   </script>
-  <script src="script.js?v=8"></script>
+  <script src="script.js"></script>
 </body>
 
 </html>
