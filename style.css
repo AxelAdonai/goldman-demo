@@ -1,0 +1,80 @@
+/* ===== ESTILOS DE IMPRESIÓN DEMO ===== */
+#reporte-impresion {
+  display: none;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+
+  #reporte-impresion,
+  #reporte-impresion * {
+    visibility: visible;
+  }
+
+  #reporte-impresion {
+    display: block !important;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    padding: 10mm;
+    background: #fff;
+  }
+
+  .rep-encabezado {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 3px solid var(--guinda);
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+  }
+
+  .rep-logo {
+    max-height: 60px;
+  }
+
+  .rep-titulo {
+    text-align: center;
+  }
+
+  .rep-titulo h1 {
+    font-size: 1rem;
+    color: var(--guinda);
+  }
+
+  table.rep {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 8px 0;
+  }
+
+  table.rep th,
+  table.rep td {
+    border: 1px solid #555;
+    padding: 5px 8px;
+    font-size: .8rem;
+  }
+
+  .resultado-bloque {
+    margin: 10px 0;
+    padding: 10px;
+    border: 2px solid var(--verde);
+    border-radius: 8px;
+    text-align: center;
+  }
+
+  .score-num {
+    font-size: 2rem;
+    font-weight: bold;
+  }
+
+  .rep-ecg {
+    max-width: 100%;
+    max-height: 350px;
+    display: block;
+    margin: 10px auto;
+  }
+}
